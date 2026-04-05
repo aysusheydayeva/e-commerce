@@ -1,0 +1,122 @@
+const db = require("./db");
+
+exports.getALLCategories = (req, res) =>{
+    const sql = "SELECT * FROM categories";
+    db.query(sql,(err, result) => {
+        if(err){
+            return res.status(500).json({ message: "Error getting categories" });
+        }
+
+        res.json(result);
+    }) ;
+};
+
+exports.getCategoryById = (res, req) =>{
+    const id = req.params.id;
+
+    if(isNaN(id)) {
+        return res.status(400).json({ message: "Invaild ID"});
+    }
+    const sql = "SELECT * FROM categories WHERE id = ?";
+    
+    db.query(sql, [id], (err, result) =>{
+        if(err) {
+            return res.status(500).json({ message: "Error geting category"});
+        }
+
+        if(result.length === 0) {
+            return res.status(404).json({ message: "Category not found"});
+        }
+
+        res.json(result[0]);
+    });
+};
+
+
+exports.createCategory = (req, res) =>{
+    const {name} = req.body;
+
+    if(!name || name.trim() ===""){
+        return res.status(400).json ({
+            message: "Name is required"
+        });
+    }
+
+    if(name.length < 3){
+        return res.status(400).json({
+            message: "Name must be at least 3 characters"
+        });
+    }
+
+    const sql = "INSERT INTO categories (name) VALUES (?)";
+
+    db.query(sql, [name], (err, result) =>{
+        if(err) {
+            console.log(err);
+        return res.status(500).json({ message: "Error creating category"});
+
+        }
+        res.status(201).json({
+            message: "Category created successfully",
+            categoryId: result.insertId
+        });
+    });
+};
+
+
+exports.updateCategory = (req, res) =>{
+    const id = req.params.id;
+    const {name} = req.body;
+
+    if(isNaN(id)) {
+        return res.status(400).json({ message: "Invalid Id"});
+    }
+
+    if(!name || name.trim() === ""){
+        return res.status(400).json({
+            message: "Name is required"
+        });
+    }
+
+
+    if(name.length < 3) {
+        return res.status(400).json({message: "Name must be at least 3 characters"});
+    }
+
+
+    const sql = "UPDATE categories SET name = ? WHERE id = ?";
+
+    db.query(sql, [name, id], (er,result) =>{
+        if(err){
+            return res.status(500).json()
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(400).json({ message: "Category not found" });
+        }
+        res.json({ message: "Category updated successfully" });
+    });
+};
+
+exports.deleteCategory = (req, res) =>{
+    const id = req.params.id;
+
+    if(isNaN(id)){
+        return res.status(400).json({ message: "Invalid Id" });
+
+    }
+
+    const sql = "DELETE FROM categories WHERE id =?";
+
+    db.query(sql,[id], (err,result) =>{
+        if(err){
+            return res.status(500).json({ message: "Error deleting category"});
+
+        }
+
+        if(result.affectedRows === 0) {
+            return res.status(404).json({message: "Category not found"});
+        }
+        res.json({message: "Category deleted seccesfully"});
+    });
+};
